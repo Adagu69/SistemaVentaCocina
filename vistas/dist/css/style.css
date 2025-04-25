@@ -1,0 +1,8 @@
+body.fondo-login {
+	background-image: url('/Sistema-de-Ventas-Restaurante-main/SistemaVentas/vistas/img/fondo1.jpg'); /* Ruta a tu imagen */
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-color: rgba(0, 0, 0, 0.5); /* Sombra oscura */
+	height: 100vh;
+  }
