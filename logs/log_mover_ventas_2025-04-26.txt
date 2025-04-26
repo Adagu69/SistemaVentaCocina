@@ -1,0 +1,16 @@
+📂 Sin movimientos. No había ventas para archivar.
+
+========== Movimiento realizado el 2025-04-26 19:19:06 ==========
+Ventas movidas: 1
+ID Venta movida: 82, Código: 1745599044
+✅ Movimiento completado exitosamente.
+
+📂 Sin movimientos. No había ventas para archivar.
+
+📂 Sin movimientos. No había ventas para archivar.
+
+========== Movimiento realizado el 2025-04-26 19:22:43 ==========
+Ventas movidas: 1
+ID Venta movida: 81, Código: 1745538159
+✅ Movimiento completado exitosamente.
+
