@@ -152,6 +152,7 @@ CUERPO DOCUMENTO
          $_GET["ruta"] == "nuevosContratos" ||
          $_GET["ruta"] == "nuevosSuscriptores" ||
          $_GET["ruta"] == "reportes" ||
+         $_GET["ruta"] == "kioskoManual"||
          $_GET["ruta"] == "salir" ||
          $_GET["ruta"] == "ventaCliente"){
 
@@ -193,7 +194,7 @@ CUERPO DOCUMENTO
 <script src="vistas/js/clientes.js"></script>
 <script src="vistas/js/ventas.js"></script>
 <script src="vistas/js/reportes.js"></script>
-
+<!--script src="https://unpkg.com/html5-qrcode"></script-->
 
 <!-- Tu script de código de barras -->
 <script>

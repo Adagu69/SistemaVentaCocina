@@ -3,10 +3,15 @@ require_once "../controladores/clientes.controlador.php";
 require_once "../modelos/clientes.modelo.php";
 
 if (isset($_POST["codigo"])) {
-    $item = "codigo"; // o "codigo" si así se llama en tu base
     $valor = $_POST["codigo"];
 
-    $cliente = ControladorClientes::ctrMostrarClientes($item, $valor);
+      // Primero intenta por código_barra
+    $cliente = ControladorClientes::ctrMostrarClientes("codigo_barra", $valor);
+
+    // Si no encuentra, intenta por código manual
+    if (!$cliente) {
+        $cliente = ControladorClientes::ctrMostrarClientes("codigo", $valor);
+    }
 
     echo json_encode($cliente);
 }
