@@ -12,6 +12,57 @@ if (session_status() == PHP_SESSION_NONE) {
   </section>
 
   <section class="content">
+    <div class="row">
+
+  <!-- 🔹 COLUMNA IZQUIERDA - DATOS Y CONTROL -->
+  <div class="col-md-5">
+
+    <div class="box box-primary">
+      <div class="box-body">
+        <!-- AQUÍ TODO TU FORMULARIO -->
+        <!-- CLIENTE, TIPO DE MENÚ, SOPA, SEGUNDO, PAGO, RESUMEN, BOTÓN GENERAR -->
+        <!-- Mueve aquí todo lo que ya tienes desde 'Seleccionar Cliente' hasta el botón Generar -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 🔸 COLUMNA DERECHA - PRODUCTOS DISPONIBLES -->
+  <div class="col-md-7">
+
+    <div class="box box-warning">
+      <div class="box-header with-border">
+        <h4 class="box-title"><i class="fa fa-cutlery"></i> Productos disponibles</h4>
+      </div>
+      <div class="box-body">
+        <div class="row">
+          <?php
+          $productos = ControladorProductos::ctrMostrarProductos(null, null, "id");
+          foreach ($productos as $prod) {
+            echo '
+              <div class="col-sm-4 text-center" style="margin-bottom:20px;">
+                <img src="vistas/img/productos/default/anonymous.png" class="img-thumbnail" style="width:100px;height:100px;">
+                <p><strong>' . $prod["descripcion"] . '</strong></p>
+                <p>S/ ' . number_format($prod["precio_venta"], 2) . '</p>
+                <button class="btn btn-success btnAgregarProductoDirecto" 
+                        data-id="' . $prod["id"] . '" 
+                        data-nombre="' . $prod["descripcion"] . '" 
+                        data-precio="' . $prod["precio_venta"] . '" 
+                        data-stock="' . $prod["stock"] . '">
+                  <i class="fa fa-plus"></i> Agregar
+                </button>
+              </div>';
+          }
+          ?>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
     <div class="box box-primary">
       <div class="box-body">
 
@@ -109,6 +160,7 @@ if (session_status() == PHP_SESSION_NONE) {
         <div id="infoCliente" class="well well-sm" style="display:none;"></div>
 
 
+   
 
         <!-- PRODUCTO -->
         <div class="form-group">
@@ -124,6 +176,39 @@ if (session_status() == PHP_SESSION_NONE) {
           </select>
         </div>
 
+                 <!-- TIPO DE MENÚ -->
+        <div class="form-group">
+          <label><i class="fa fa-list"></i> Tipo de Menú</label><br>
+          <button id="btnConSopa" class="btn btn-info">Con Sopa</button>
+          <button id="btnSinSopa" class="btn btn-warning">Sin Sopa</button>
+        </div>
+
+        <!-- SOPA -->
+        <div class="form-group" id="grupoSopa" style="display:none;">
+          <label><i class="fa fa-tint"></i> Elija su Sopa</label><br>
+          <?php
+          $productos = ControladorProductos::ctrMostrarProductos(null, null, "id");
+          foreach ($productos as $prod) {
+            if (stripos($prod["descripcion"], "sopa") !== false && $prod["stock"] > 0) {
+              echo "<button class='btn btn-outline-primary btnSopa' data-id='{$prod["id"]}'>{$prod["descripcion"]}</button> ";
+            }
+          }
+          ?>
+        </div>
+
+        <!-- SEGUNDO -->
+        <div class="form-group" id="grupoSegundo" style="display:none;">
+          <label><i class="fa fa-drumstick-bite"></i> Elija su Segundo</label><br>
+          <?php
+          foreach ($productos as $prod) {
+            if (stripos($prod["descripcion"], "sopa") === false && $prod["stock"] > 0) {
+              echo "<button class='btn btn-outline-success btnSegundo' data-id='{$prod["id"]}'>{$prod["descripcion"]}</button> ";
+            }
+          }
+          ?>
+        </div>
+
+      
         <!-- CANTIDAD -->
         <div class="form-group">
           <label for="cantidad"><i class="fa fa-sort-numeric-asc"></i> Cantidad a consumir</label>
@@ -172,13 +257,16 @@ if (session_status() == PHP_SESSION_NONE) {
     </div>
 
   </section>
+
 </div>
 
 
 <script>
   let stockOriginal = 0;
   let totalAPagar = 0;
+  
 
+//FUNCION ACTUALIZARRESUMEN
   function actualizarResumen(prod, cantidad, metodo, montoPago = 0) {
     const precio = parseFloat(prod.precio_venta);
     const subtotal = precio * cantidad;
@@ -191,8 +279,7 @@ if (session_status() == PHP_SESSION_NONE) {
     <p><strong>Precio unitario:</strong> S/ ${precio.toFixed(2)}</p>
     <p><strong>Subtotal:</strong> S/ ${subtotal.toFixed(2)}</p>
     <p><strong>Stock restante:</strong> ${restante}</p>
-    <p><strong>Método de pago:</strong> ${metodo}</p>
-  `;
+    <p><strong>Método de pago:</strong> ${metodo}</p>`;
 
     if (metodo === 'Efectivo') {
       const vuelto = montoPago - subtotal;
@@ -213,6 +300,7 @@ if (session_status() == PHP_SESSION_NONE) {
     $("#resumenVenta").html(resumen);
   }
 
+  //FUNCION ACTUALIZARBOTON
   function actualizarBoton() {
     const idCliente = $("#codigoCliente").data("id");
     const idProducto = $("#producto").val();
@@ -230,6 +318,10 @@ if (session_status() == PHP_SESSION_NONE) {
     }
   }
 
+
+
+
+//BUSAR CLIENTE
   $("#codigoCliente").on("change", function() {
     const codigo = $(this).val().trim();
     if (codigo !== "") {
@@ -298,6 +390,8 @@ if (session_status() == PHP_SESSION_NONE) {
     }
   });
 
+
+
   $("#formNuevoCliente").on("submit", function(e) {
     e.preventDefault();
 
@@ -364,6 +458,7 @@ if (session_status() == PHP_SESSION_NONE) {
     });
   });
 
+
   // Guardar nuevo cliente
   $("#btnGuardarNuevoCliente").on("click", function() {
     const nombre = $("#nombreNuevoCliente").val().trim();
@@ -419,6 +514,7 @@ if (session_status() == PHP_SESSION_NONE) {
       });
     }
   });
+
 
   $("#cantidad").on("input", function() {
     const cantidad = parseInt($(this).val());
@@ -484,6 +580,7 @@ if (session_status() == PHP_SESSION_NONE) {
     actualizarBoton();
   });
 
+
   $("#btnGenerarVenta").on("click", function() {
     const idCliente = $("#codigoCliente").data("id");
     const idProducto = $("#producto").val();
@@ -502,6 +599,11 @@ if (session_status() == PHP_SESSION_NONE) {
       return;
     }
 
+          // 🔥 SPINNER Y BLOQUEO DE BOTÓN
+  $("#btnGenerarVenta").html('<i class="fa fa-spinner fa-spin"></i> Procesando...');
+  $("#btnGenerarVenta").prop("disabled", true);
+
+  // ⚡ ENVÍO AJAX
     $.ajax({
       url: "ajax/ventasCliente.ajax.php",
       method: "POST",
@@ -513,46 +615,54 @@ if (session_status() == PHP_SESSION_NONE) {
         metodoPago: metodoPago,
         montoPago: montoPago
       },
-      success: function(res) {
-        console.log("RESPUESTA:", res);
-        if (res.respuesta && res.respuesta.toLowerCase() === "ok") {
-          swal({
-            type: "success",
-            title: "Venta registrada correctamente",
-            showConfirmButton: true,
-            confirmButtonText: "Cerrar"
-          }).then(function(result) {
-            if (result.value) {
-              // Limpiar formulario
-              $("#codigoCliente").val("").removeData("id");
-              $("#producto").val("");
-              $("#cantidad").val("");
-              $("#metodoPago").val("");
-              $("#montoPago").val("");
-              $("#infoCliente").html("").hide();
-              $("#resumenVenta").html(`<p class="text-muted">Aquí aparecerá el detalle del producto seleccionado.</p>`);
-              $("#extraPago").html("");
-              $("#btnGenerarVenta").prop("disabled", true);
-            }
-          });
-        } else {
-          swal({
-            type: "error",
-            title: "Error",
-            text: "Ocurrió un error al registrar la venta: " + JSON.stringify(res),
-            confirmButtonText: "Cerrar"
-          });
-        }
-      },
-      error: function(xhr) {
-        swal({
-          type: "error",
-          title: "Error de conexión",
-          text: "No se pudo procesar la venta.",
-          confirmButtonText: "Cerrar"
-        });
-        console.error("ERROR EN LA VENTA:", xhr.responseText);
+     success: function(res) {
+  console.log("RESPUESTA:", res);
+  if (res.respuesta && res.respuesta.toLowerCase() === "ok") {
+    swal({
+      type: "success",
+      title: "Venta registrada correctamente",
+      showConfirmButton: true,
+      confirmButtonText: "Cerrar"
+    }).then(function(result) {
+      if (result.value) {
+        // Limpiar formulario
+        $("#codigoCliente").val("").removeData("id");
+        $("#producto").val("");
+        $("#cantidad").val("");
+        $("#metodoPago").val("");
+        $("#montoPago").val("");
+        $("#infoCliente").html("").hide();
+        $("#resumenVenta").html(`<p class="text-muted">Aquí aparecerá el detalle del producto seleccionado.</p>`);
+        $("#extraPago").html("");
+        $("#btnGenerarVenta").prop("disabled", true);
+        // 👇 RESTAURAR BOTÓN
+        $("#btnGenerarVenta").html('<i class="fa fa-check"></i> Generar Venta');
       }
+    });
+  } else {
+    swal({
+      type: "error",
+      title: "Error",
+      text: "Ocurrió un error al registrar la venta: " + JSON.stringify(res),
+      confirmButtonText: "Cerrar"
+    });
+    // 👇 RESTAURAR BOTÓN
+    $("#btnGenerarVenta").html('<i class="fa fa-check"></i> Generar Venta');
+    $("#btnGenerarVenta").prop("disabled", false);
+  }
+},
+error: function(xhr) {
+  swal({
+    type: "error",
+    title: "Error de conexión",
+    text: "No se pudo procesar la venta.",
+    confirmButtonText: "Cerrar"
+  });
+  console.error("ERROR EN LA VENTA:", xhr.responseText);
+  // 👇 RESTAURAR BOTÓN
+  $("#btnGenerarVenta").html('<i class="fa fa-check"></i> Generar Venta');
+  $("#btnGenerarVenta").prop("disabled", false);
+}
     });
   });
 </script>
