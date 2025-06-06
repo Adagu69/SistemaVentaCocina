@@ -11,28 +11,32 @@ class AjaxVentasCliente {
     /*=============================================
     GENERAR VENTA DESDE LA VISTA ventaCliente.php
     =============================================*/
-    public function ajaxGenerarVentaCliente(){
+       public function ajaxGenerarVentaCliente() {
 
-        // Llamamos al método del controlador que procesa la venta
-        $respuesta = ControladorVentasCliente::ctrGenerarVentaCliente();
-        echo json_encode(["respuesta" => "ok"]);
+        if (
+            isset($_POST["idCliente"]) &&
+            isset($_POST["metodoPago"]) &&
+            isset($_POST["carrito"])
+        ) {
+            $idCliente = $_POST["idCliente"];
+            $metodo = $_POST["metodoPago"];
+            $monto = $_POST["montoPago"] ?? 0;
+            $carrito = json_decode($_POST["carrito"], true);
+
+            $respuesta = ControladorVentasCliente::ctrGenerarVentaCliente($idCliente, $metodo, $monto, $carrito);
+
+            echo json_encode($respuesta);
+        } else {
+            echo json_encode(["respuesta" => "error", "mensaje" => "Datos incompletos"]);
+        }
     }
 }
+
+
 
 /*===========================================
 COMPROBAR SI SE RECIBIERON DATOS POR POST
 =============================================*/
-if(isset($_POST["idCliente"]) && 
-   isset($_POST["idProducto"]) && 
-   isset($_POST["cantidad"]) && 
-   isset($_POST["metodoPago"])){
+$generar = new AjaxVentasCliente();
+$generar->ajaxGenerarVentaCliente();
 
-    $_POST["montoPago"] = $_POST["montoPago"] ?? 0;
-
-    $generarVenta = new AjaxVentasCliente();
-    $generarVenta->ajaxGenerarVentaCliente();
-
-}else{
-    echo "error_data"; 
-    // Retorna error si faltan datos requeridos.
-}
