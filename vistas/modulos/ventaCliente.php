@@ -13,6 +13,17 @@ if (session_status() == PHP_SESSION_NONE) {
   }
 </style>
 
+
+<div id="loader-overlay" style="
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.7) url('vistas/img/productos/01/Loader.gif') no-repeat center center;
+    background-size: 80px;">
+</div>
+
 <div class="content-wrapper">
   <section class="content-header">
     <h1><i class="fa fa-cart-plus"></i> Venta Rápida</h1>
@@ -324,6 +335,16 @@ HTML;
     
         </div>
 <script>
+
+  function mostrarLoader() {
+  $("#loader-overlay").fadeIn(100);
+}
+
+function ocultarLoader() {
+  $("#loader-overlay").fadeOut(100);
+}
+
+
   let stockOriginal = 0;
   let totalAPagar = 0;
 
@@ -374,13 +395,28 @@ HTML;
 
   //FUNCION ACTUALIZARBOTON
 function actualizarBoton() {
-  const idCliente = $("#codigoCliente").data("id");
+  const idCliente = $("#codigoCliente").data("id") || $("#clienteManual").val();
   const metodoPago = $("#metodoPago").val();
   const montoPago = parseFloat($("#montoPago").val()) || 0;
 
   const hayProductos = carrito.length > 0;
   const stockSuficiente = carrito.every(item => item.cantidad > 0 && item.cantidad <= item.stock);
 
+  // Validar paso a paso según el nuevo flujo
+
+  // Paso 1: ¿cliente seleccionado?
+  if (!idCliente) {
+    $("#btnGenerarVenta").prop("disabled", true);
+    return;
+  }
+
+  // Paso 2: ¿hay productos?
+  if (!hayProductos || !stockSuficiente) {
+    $("#btnGenerarVenta").prop("disabled", true);
+    return;
+  }
+
+  // Paso 3: método de pago
   const pagoValido = metodoPago && (
     (metodoPago === 'Efectivo' && montoPago >= totalAPagar) ||
     metodoPago === 'Yape' ||
@@ -388,11 +424,13 @@ function actualizarBoton() {
     metodoPago === 'Cuenta'
   );
 
-  const clienteValido = !!idCliente;
+  if (!pagoValido) {
+    $("#btnGenerarVenta").prop("disabled", true);
+    return;
+  }
 
-  const habilitado = clienteValido && hayProductos && stockSuficiente && pagoValido;
-
-  $("#btnGenerarVenta").prop("disabled", !habilitado);
+  // ✅ Todo válido
+  $("#btnGenerarVenta").prop("disabled", false);
 }
 
 
@@ -460,7 +498,18 @@ function renderizarCarrito() {
 }
 
 // 🛒 Agregar producto
+// ⚠️ BLOQUEAR SELECCIÓN DE PRODUCTOS SIN CLIENTE
 $(document).on("click", ".btnAgregarProductoDirecto", function () {
+  const idCliente = $("#codigoCliente").data("id") || $("#clienteManual").val();
+  if (!idCliente) {
+    swal({
+      type: "warning",
+      title: "Primero selecciona un cliente",
+      confirmButtonText: "Entendido"
+    });
+    return;
+  }
+
   const idProd = $(this).data("id");
   const nombre = $(this).data("nombre");
   const precio = parseFloat($(this).data("precio"));
@@ -471,8 +520,7 @@ $(document).on("click", ".btnAgregarProductoDirecto", function () {
     return;
   }
 
-  const cantidad = 1; // Forzamos cantidad 1 para productos de menú directo
-
+  const cantidad = 1;
   const existente = carrito.find(p => p.id === idProd);
 
   if (existente) {
@@ -487,7 +535,7 @@ $(document).on("click", ".btnAgregarProductoDirecto", function () {
     carrito.push({
       id: idProd,
       nombre: nombre,
-      imagen: "", // opcional si no usas imagen aquí
+      imagen: "",
       precio: precio,
       cantidad: cantidad,
       stock: stock
@@ -555,6 +603,8 @@ $("#clienteManual").on("change", function () {
     return;
   }
 
+  mostrarLoader();
+
   // Buscar cliente por ID (igual que el código)
   $.ajax({
     url: "ajax/buscarCliente.ajax.php",
@@ -579,9 +629,13 @@ $("#clienteManual").on("change", function () {
       }
       actualizarBoton();
     },
+     complete: function () {
+      ocultarLoader(); // ✅ FINAL
+    },
     error: function (xhr) {
       console.error(xhr.responseText);
       alert("Error al obtener el cliente.");
+      ocultarLoader();
     }
   });
 });
@@ -681,8 +735,20 @@ $("#btnGuardarNuevoCliente").on("click", function () {
 // METODO DE PAGO
 $("#metodoPago").on("change", function () {
   const metodo = $(this).val();
-  let html = '';
 
+  if (carrito.length === 0) {
+    swal({
+      type: "warning",
+      title: "Primero agrega productos al carrito",
+      confirmButtonText: "Entendido"
+    });
+    $(this).val(""); // reset
+    $("#extraPago").html("");
+    return;
+  }
+
+  // ⬇️ el resto continúa como ya está
+  let html = '';
   if (metodo === "Efectivo") {
     html = `
       <div class='form-group'>
@@ -696,49 +762,15 @@ $("#metodoPago").on("change", function () {
         <p><strong>Escanea el QR con ${metodo}:</strong></p>
         <img src='${imgSrc}' alt='QR ${metodo}' style='max-width:200px;'>
       </div>`;
-  } else if (metodo === "Cuenta") {
-    html = ""; // oculta todo
   }
 
   $("#extraPago").html(html);
 
-  // 🔄 Vincular nuevamente el input para "Efectivo"
-  $("#montoPago").on("input", function () {
-    const cantidad = parseInt($("#cantidad").val());
-    const idProd = $("#producto").val();
-    const monto = parseFloat($(this).val());
-
-    if (idProd && cantidad) {
-      $.ajax({
-        url: "ajax/obtenerProducto.ajax.php",
-        method: "POST",
-        data: { id: idProd },
-        dataType: "json",
-        success: function (prod) {
-          actualizarResumen(prod, cantidad, metodo, monto);
-          actualizarBoton();
-        }
-      });
-    }
-  });
-
-  // Forzar actualización visual y lógica
-  const cantidadActual = parseInt($("#cantidad").val()) || 0;
-  const idProdActual = $("#producto").val();
-
-  if (idProdActual && cantidadActual > 0) {
-    $.ajax({
-      url: "ajax/obtenerProducto.ajax.php",
-      method: "POST",
-      data: { id: idProdActual },
-      dataType: "json",
-      success: function (prod) {
-        const montoActual = parseFloat($("#montoPago").val()) || 0;
-        actualizarResumen(prod, cantidadActual, metodo, montoActual);
-        actualizarBoton();
-      }
-    });
+  if (metodo === "Efectivo") {
+    $("#montoPago").on("input", actualizarBoton);
   }
+
+  actualizarBoton();
 });
 
 // BOTON GENERAR VENTA
