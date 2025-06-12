@@ -771,4 +771,12 @@ class ControladorVentas{
 
 	}
 
+	/* ===============================
+   CREAR VENTA DESDE AJAX (Touch UI)
+   =============================== */
+public static function ctrCrearVentaRapida($datos) {
+  $tabla = "ventas";
+  return ModeloVentas::mdlIngresarVentaRapida($tabla, $datos);
+}
+
 }

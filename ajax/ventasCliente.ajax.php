@@ -1,42 +1,53 @@
 <?php
-require_once "../controladores/ventasCliente.controlador.php";
-require_once "../modelos/ventasCliente.modelo.php";
 
-// Si tu controlador utiliza otros modelos (por ejemplo, productos, clientes), agrégalos también:
-require_once "../modelos/productos.modelo.php";
-require_once "../modelos/clientes.modelo.php";
+require_once "../controladores/ventas.controlador.php";
+require_once "../modelos/ventas.modelo.php";
 
-class AjaxVentasCliente {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $idCliente = $_POST["idCliente"];
+  $metodoPago = $_POST["metodoPago"] ?? "Efectivo";
+  $montoPago = $_POST["montoPago"] ?? 0;
+  $carrito = json_decode($_POST["carrito"], true);
 
-    /*=============================================
-    GENERAR VENTA DESDE LA VISTA ventaCliente.php
-    =============================================*/
-       public function ajaxGenerarVentaCliente() {
+  if (!$idCliente || empty($carrito)) {
+    echo json_encode(["respuesta" => "error", "mensaje" => "Faltan datos de cliente o carrito."]);
+    exit;
+  }
 
-        if (
-            isset($_POST["idCliente"]) &&
-            isset($_POST["metodoPago"]) &&
-            isset($_POST["carrito"])
-        ) {
-            $idCliente = $_POST["idCliente"];
-            $metodo = $_POST["metodoPago"];
-            $monto = $_POST["montoPago"] ?? 0;
-            $carrito = json_decode($_POST["carrito"], true);
+  $codigo = time(); // simple timestamp como código único
+  $total = 0;
+  $productos = [];
 
-            $respuesta = ControladorVentasCliente::ctrGenerarVentaCliente($idCliente, $metodo, $monto, $carrito);
+  foreach ($carrito as $item) {
+    $subtotal = $item["precio"] * $item["cantidad"];
+    $total += $subtotal;
+    $productos[] = [
+      "id" => $item["id"],
+      "descripcion" => $item["nombre"],
+      "cantidad" => $item["cantidad"],
+      "precio" => $item["precio"],
+      "total" => $subtotal,
+      "stock" => $item["stock"]
+    ];
+  }
 
-            echo json_encode($respuesta);
-        } else {
-            echo json_encode(["respuesta" => "error", "mensaje" => "Datos incompletos"]);
-        }
-    }
+
+  $datosVenta = [
+    "codigo" => $codigo,
+    "id_cliente" => $idCliente,
+    "id_vendedor" => 0,
+    "productos" => json_encode($productos),
+    "impuesto" => 0,
+    "neto" => $total,
+    "total" => $total,
+    "metodo_pago" => $metodoPago,
+    "monto_pago" => $montoPago
+  ];
+
+   $respuesta = ControladorVentas::ctrCrearVentaRapida($datosVenta);
+
+  echo json_encode([
+    "respuesta" => $respuesta,
+    "codigo" => $codigo
+  ]);
 }
-
-
-
-/*===========================================
-COMPROBAR SI SE RECIBIERON DATOS POR POST
-=============================================*/
-$generar = new AjaxVentasCliente();
-$generar->ajaxGenerarVentaCliente();
-

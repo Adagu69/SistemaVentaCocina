@@ -114,6 +114,10 @@ $valorUnitario = number_format($item["precio"], 2);
 
 $precioTotal = number_format($item["total"], 2);
 
+// 🧠 Tipo de menú: desayuno/almuerzo
+$tipoServicio = isset($item["categoria"]) && $item["categoria"] == 17 ? "Desayuno" : "Almuerzo";
+$menu = isset($item["tipo"]) ? $item["tipo"] : "M1";
+
 $bloque2 = <<<EOF
 
 <table style="font-size:9px;">
@@ -121,7 +125,7 @@ $bloque2 = <<<EOF
 	<tr>
 	
 		<td style="width:160px; text-align:left">
-		$item[descripcion] 
+		<strong>[$tipoServicio - $menu]</strong> {$item['descripcion']}
 		</td>
 
 	</tr>

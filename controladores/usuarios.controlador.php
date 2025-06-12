@@ -132,10 +132,10 @@ class ControladorUsuarios{
 
 				$encriptar = crypt($_POST["nuevoPassword"], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
 
-				$datos = array("nombre" => $_POST["editarNombre"],
-					           "usuario" => $_POST["editarUsuario"],
+				$datos = array( "nombre" => $_POST["nuevoNombre"],
+  								"usuario" => $_POST["nuevoUsuario"],
 					           "password" => $encriptar,
-					           "perfil" => isset($_POST["editarPerfil"]) ? $_POST["editarPerfil"] : null,
+					           "perfil" => isset($_POST["nuevoPerfil"]) ? $_POST["nuevoPerfil"] : null,
 					           "foto"=>$ruta);
 
 				$respuesta = ModeloUsuarios::mdlIngresarUsuario($tabla, $datos);
